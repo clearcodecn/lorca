@@ -26,7 +26,7 @@ type ui struct {
 	tmpDir string
 }
 
-var DefaultChromeArgs = []string{
+var defaultChromeArgs = []string{
 	"--disable-background-networking",
 	"--disable-background-timer-throttling",
 	"--disable-backgrounding-occluded-windows",
@@ -83,7 +83,7 @@ var DisableAutomation = []string{
 }
 
 func NewDefault(url, dir string, width, height int, customArgs ...string) (UI, error) {
-	args := append(DefaultChromeArgs, customArgs...)
+	args := append(defaultChromeArgs, customArgs...)
 	return New(url, dir, width, height, args...)
 }
 
