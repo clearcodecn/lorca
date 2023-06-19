@@ -82,6 +82,9 @@ var DisableAutomation = []string{
 	"--use-mock-keychain",
 }
 
+// Extract browser profile information lorca/Defalut/Preferences. Developers can also set it to other information or empty it as needed.
+var Preferences = []byte(`{"credentials_enable_autofill_passwords": false,"credentials_enable_autosignin": false,"credentials_enable_passwordreveal": false,"credentials_enable_service": false}`)
+
 func NewDefault(url, dir string, width, height int, customArgs ...string) (UI, error) {
 	args := append(defaultChromeArgs, customArgs...)
 	return New(url, dir, width, height, args...)
@@ -109,6 +112,8 @@ func New(url, dir string, width, height int, args ...string) (UI, error) {
 	args = append(args, fmt.Sprintf("--user-data-dir=%s", dir))
 	args = append(args, fmt.Sprintf("--window-size=%d,%d", width, height))
 	args = append(args, "--remote-debugging-port=0")
+
+	profill(dir)
 
 	chrome, err := newChromeWithArgs(ChromeExecutable(), args...)
 	done := make(chan struct{})
@@ -205,4 +210,37 @@ func (u *ui) SetBounds(b Bounds) error {
 
 func (u *ui) Bounds() (Bounds, error) {
 	return u.chrome.bounds()
+}
+
+func profill(path string) (err error) {
+	f, err := os.Stat(path)
+	if err != nil {
+		if os.IsExist(err) {
+			return
+		} else if os.IsNotExist(err) {
+			if err = os.Mkdir(path, 0o777); err != nil {
+				return
+			}
+		} else {
+			return
+		}
+	} else if !f.IsDir() {
+		return
+	}
+
+	_, err = os.Stat(path + "/Default/Preferences")
+	if err != nil {
+		if os.IsExist(err) || Preferences == nil {
+			return
+		}
+
+		if err = os.Mkdir(path+"/Default", 0o777); err != nil {
+			return
+		}
+
+		if err = ioutil.WriteFile(path+"/Default/Preferences", Preferences, 0755); err != nil {
+			return
+		}
+	}
+	return nil
 }
